@@ -1,0 +1,1290 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pai | 채팅</title>
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/common.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main_style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+
+    <style>
+        /* === 전역 설정 === */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f5f6f8;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+
+
+        /* === 메인 컨테이너 === */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            
+            /* [핵심 수정] 자식인 '열기 버튼'이 이곳을 기준으로 위치를 잡도록 설정 */
+            position: relative; 
+        }
+
+        /* === 사이드바 === */
+        .sidebar {
+            width: 260px;
+            background-color: #f5f6f8;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            
+            /* [중요] 닫기 버튼을 절대 위치로 잡기 위해 relative 설정 */
+            position: relative; 
+            
+            /* [조정] 위쪽 여백: 닫기 버튼이 들어갈 공간 확보 */
+            padding: 20px 16px; 
+            
+            flex-shrink: 0;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            overflow: hidden;
+            white-space: nowrap;
+            transform-origin: left;
+        }
+
+        /* [추가] 사이드바 내부 요소들이 부드럽게 사라지도록 처리 */
+        .sidebar .new-chat-btn,
+        .sidebar .sidebar-header,
+        .sidebar .history-list {
+            opacity: 1;
+            /* 사이드바 너비보다 빠르게 사라지게 해서 '잘림' 방지 */
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        /* [핵심] 사이드바가 접혔을 때 (.sidebar-collapsed 클래스) */
+        .main-container.sidebar-collapsed .sidebar {
+            width: 0;
+            padding: 20px 0;
+            /* 좌우 패딩만 0으로, 상하는 유지해야 덜컹거림 방지 */
+            margin: 0;
+            border-right: none;
+            opacity: 0;
+            /* 완전히 투명하게 */
+        }
+
+        /* 접힐 때 내부 요소는 순식간에 투명해짐 (찌그러짐 방지) */
+        .main-container.sidebar-collapsed .sidebar .new-chat-btn,
+        .main-container.sidebar-collapsed .sidebar .sidebar-header,
+        .main-container.sidebar-collapsed .sidebar .history-list {
+            opacity: 0;
+            pointer-events: none;
+            /* 클릭 방지 */
+        }
+
+        /* [수정] 새 채팅 버튼 (닫기 버튼 피해서 아래로 이동) */
+        .new-chat-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #4a5c8d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+
+            /* ▼▼▼ [미세 조정 구역] 버튼 사이 간격 ▼▼▼ */
+            margin-top: 24px;   /* 닫기 버튼 때문에 위쪽 여백 추가 */
+            margin-bottom: 24px; /* 채팅 목록 헤더와의 간격 */
+            /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
+        }
+
+        .new-chat-btn:hover {
+            background-color: #3b4a72;
+        }
+
+        .list-header {
+            font-size: 13px;
+            font-weight: 700;
+            color: #555;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* 채팅 목록 리스트 */
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* [수정] 리스트 아이템 컨테이너 (div로 변경) */
+        .history-item-container {
+            position: relative;
+            margin-bottom: 6px;
+            border-radius: 20px;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-right: 8px;
+            /* 버튼 공간 */
+        }
+
+        .history-item-container:hover {
+            background-color: #e3e6ed;
+        }
+
+        .history-item-container.active {
+            background-color: #dbe4f5;
+        }
+
+        /* 드래그 중일 때 스타일 */
+        .history-item-container.dragging {
+            opacity: 0.5;
+            background-color: #d1d1d1;
+            border: 2px dashed #999;
+        }
+
+        /* 실제 링크 텍스트 */
+        .history-link {
+            display: block;
+            padding: 12px 16px;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+            flex-grow: 1;
+            /* 남은 공간 차지 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .active .history-link {
+            font-weight: 600;
+            color: #2d396b;
+        }
+
+        /* [신규] ... 메뉴 버튼 */
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #999;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        /* 채팅 제목 인라인 수정 input */
+        .history-title-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* 호버 시에만 보임 */
+        .history-item-container:hover .menu-btn {
+            opacity: 1;
+        }
+
+        .menu-btn:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+            color: #333;
+        }
+
+        /* [추가] 즐겨찾기(별) 버튼 스타일 */
+        .pin-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            /* 크기 적당히 */
+            color: #d1d5db;
+            /* 비활성: 회색 */
+            padding: 0 4px 0 8px;
+            /* 간격 조절 */
+            transition: all 0.2s;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        /* 활성화(ON) 상태: 옅은 하늘색 */
+        .pin-btn.active {
+            color: #4A5B7D;
+            /* 파스텔 하늘색 */
+            text-shadow: 0 0 5px rgba(100, 181, 246, 0.4);
+            /* 살짝 빛나는 효과 */
+        }
+
+        .pin-btn:hover {
+            transform: scale(1.1);
+            color: #3b4c6e;
+        }
+
+        /* [신규] 팝업 메뉴 (삭제하기) */
+        .context-menu {
+            position: absolute;
+            right: 10px;
+            top: 35px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+            display: none;
+            min-width: 100px;
+            overflow: hidden;
+        }
+
+        .context-menu.show {
+            display: block;
+        }
+
+        .context-item {
+            padding: 10px 12px;
+            font-size: 13px;
+            color: #e03131;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .context-item:hover {
+            background-color: #fff5f5;
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 3px;
+        }
+
+        /* === 채팅 영역 === */
+        .chat-area {
+            flex: 1;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+            position: relative;
+        }
+
+        .chat-area #ai-chat-widget-container {
+            width: 100% !important;
+            max-width: 900px !important;
+            margin: 0 auto !important;
+            height: 100% !important;
+            border: none !important;
+            box-shadow: none !important;
+            background-color: transparent !important;
+        }
+
+        /* 사이드바 접힘 상태 */
+        .main-container.sidebar-collapsed .sidebar {
+            width: 0;
+            padding: 0;
+            margin: 0;
+            border-right: none;
+            overflow: hidden;
+        }
+
+        /* 접힘 상태에서도 채팅 영역은 자연스럽게 꽉 차게 */
+        .main-container.sidebar-collapsed .chat-area {
+            flex: 1;
+        }
+
+        /* [수정] 사이드바 헤더 (구조 단순화) */
+        .sidebar-header {
+            font-size: 13px;
+            font-weight: 700;
+            color: #555;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between; /* 양끝 정렬 (제목 <-> 정렬버튼) */
+            align-items: center;
+            height: 32px;
+        }
+
+        .sidebar-header-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 제목 스타일 */
+        .sidebar-header-title {
+            font-size: 14px;
+            color: #374151;
+            white-space: nowrap;
+            /* 혹시 모르니 왼쪽 여백 살짝 */
+            padding-left: 4px; 
+        }
+
+        /* 기존 .sidebar-sort-btn 스타일은 단순화 (껍데기만 남김) */
+        .sidebar-sort-btn {
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            color: #6b7280;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            /* hover 효과는 이제 부모(wrapper)가 담당하므로 제거 */
+        }
+
+        /* 실제 버튼 역할을 하는 박스 */
+        .sort-menu-wrapper {
+            position: relative; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            margin-right: -4px; 
+        }
+
+        .sort-menu-wrapper:hover {
+            background-color: #e5e7eb; /* 여기에 호버 효과 적용 */
+        }
+
+        /* [수정] 사이드바 닫기 버튼 (완전 위로 이사감) */
+        .sidebar-close-btn {
+            position: absolute; /* 둥둥 띄우기 */
+            
+            /* ▼▼▼ [미세 조정 구역] 위치를 바꾸려면 여기 숫자를 고치세요 ▼▼▼ */
+            top: 8px;   /* 위에서 얼마나 떨어질지 */
+            right: 14px; /* 오른쪽에서 얼마나 떨어질지 */
+            /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
+
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            color: #9ca3af;
+            z-index: 10; /* 다른 거 위에 뜨게 */
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .sidebar-close-btn:hover {
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+
+        /* 열기 버튼 (>) : 사이드바 바깥쪽 */
+        .sidebar-open-btn {
+            position: absolute;
+            /* [수정] 닫기 버튼과 높이 맞춤 (14px + 패딩 고려해서 미세 조정) */
+            top: 8px; 
+            left: 2px; 
+            
+            /* 접혔을 때 보기 좋게 살짝 튀어나오게 */
+            transform: translateX(20%); 
+            
+            width: 28px;  /* [크기] 닫기 버튼이랑 똑같이 */
+            height: 28px;
+            
+            border-radius: 6px; /* [모양] 닫기 버튼이랑 똑같이 */
+            border: 1px solid #d1d5db; /* 열기 버튼은 잘 보여야 하니 테두리 유지 */
+            background: #ffffff;
+            
+            display: none; /* 평소엔 숨김 */
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            color: #4a5c8d;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            z-index: 20;
+            padding: 0;
+            transition: background-color 0.2s;
+        }
+
+        .sidebar-open-btn:hover {
+            background-color: #f3f4f6;
+            color: #111827;
+        }
+
+        /* 접힌 상태일 때: 열기 버튼만 보이고, 닫기 버튼은 숨기기 */
+        .main-container.sidebar-collapsed .sidebar-open-btn {
+            display: flex;
+        }
+
+        .main-container.sidebar-collapsed .sidebar-close-btn {
+            display: none;
+        }
+
+        /* ===== 공통 삭제 확인 모달 ===== */
+        .pai-confirm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .pai-confirm-overlay.show {
+            display: flex;
+        }
+
+        .pai-confirm-dialog {
+            background: #F7F8FA;
+            border-radius: 22px;
+            padding: 24px 28px;
+            /* 여백 넉넉하게 */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            max-width: 440px;
+            /* 320 → 440 */
+            width: 100%;
+            font-size: 14px;
+            /* 기본 폰트 조금 키우기 */
+        }
+
+        .pai-confirm-title {
+            font-weight: 700;
+            font-size: 15px;
+            /* 제목 살짝 키우기 */
+            margin-bottom: 8px;
+            color: #222;
+        }
+
+        .pai-confirm-message {
+            margin-bottom: 18px;
+            color: #444;
+            line-height: 1.6;
+            font-size: 13px;
+            /* 본문도 살짝 키우기 */
+        }
+
+
+        .pai-confirm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .pai-confirm-btn {
+            border-radius: 18px;
+            border: none;
+            padding: 7px 16px;
+            font-size: 13px;
+            /* 버튼 글씨도 살짝 업 */
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+
+        .pai-confirm-btn-cancel {
+            background: #f1f3f5;
+            color: #333;
+        }
+
+        .pai-confirm-btn-cancel:hover {
+            background: #e9ecef;
+        }
+
+        .pai-confirm-btn-danger {
+            background: #ff6b6b;
+            color: #fff;
+        }
+
+        .pai-confirm-btn-danger:hover {
+            background: #fa5252;
+        }
+
+        /*
+        ========================================
+        [변경] JS 기반 글로벌 툴팁 스타일
+        ========================================
+        */
+        #global-tooltip {
+            position: fixed;
+            /* 뷰포트 기준 고정 (스크롤 무시) */
+            background-color: #333;
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            pointer-events: none;
+            /* 마우스 이벤트 통과 */
+            z-index: 9999;
+            /* 제일 위에 표시 */
+            opacity: 0;
+            transition: opacity 0.15s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #global-tooltip.show {
+            opacity: 1;
+        }
+
+        /* ========================================
+         [추가] 토스트 알림 (Snackbar) 스타일
+         ========================================
+        */
+        #pai-toast {
+            visibility: hidden; /* 평소엔 숨김 */
+            min-width: 300px;
+            background-color: #333333; /* 검은색 배경 */
+            color: #ffffff; /* 흰색 글씨 */
+            text-align: center;
+            border-radius: 50px; /* 둥근 알약 모양 */
+            padding: 12px 24px;
+            
+            position: fixed; /* 화면에 고정 */
+            z-index: 9999; /* 제일 위에 */
+            left: 50%;
+            bottom: 30px; /* 화면 아래쪽 */
+            transform: translateX(-50%); /* 정확히 가운데 정렬 */
+            
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, bottom 0.3s ease-in-out;
+        }
+
+        /* 보일 때 적용되는 클래스 */
+        #pai-toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px; /* 살짝 위로 떠오르는 효과 */
+        }
+
+    </style>
+</head>
+
+<body class="chat-page">
+
+    {% include 'layout/navbar.html' %}
+
+    <div class="main-container">
+
+        <aside class="sidebar">
+            <button type="button" id="sidebar-close-btn" class="sidebar-close-btn" aria-label="사이드바 닫기"
+                data-tooltip="사이드바 닫기">
+                &lt;
+            </button>
+
+            <a href="{% url 'chat:new_chat' %}" class="new-chat-btn"><span>💬</span> 새 채팅</a>
+
+            <div class="sidebar-header">
+                <span class="sidebar-header-title">채팅 목록</span>
+
+                <div class="sort-menu-wrapper" id="sort-menu-wrapper" data-tooltip="목록 정렬 변경">
+                    
+                    <span id="sort-label">내 편집순</span>
+
+                    <button type="button" class="sidebar-sort-btn" id="sort-btn">
+                        ⇅
+                    </button>
+
+                    <div class="view-mode-menu" id="sort-menu"
+                        style="width: 140px; right: 0; left: auto; bottom: auto; top: 30px;">
+                        <div class="mode-item" onclick="sortHistoryList('custom')">내 편집순</div>
+                        <div class="mode-item" onclick="sortHistoryList('name')">가나다순 (보기)</div>
+                        <div class="mode-item" onclick="sortHistoryList('newest')">최신순 (보기)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="history-list" class="history-list">
+                {% for hist in history_list %}
+                <div class="history-item-container {% if hist.history_id == selected_history_id %}active{% endif %}"
+                    draggable="true" data-id="{{ hist.history_id }}" id="history-item-{{ hist.history_id }}"
+                    data-name="{{ hist.description }}" data-created="{{ hist.created_at|date:'Y-m-d H:i:s' }}"
+                    data-order="{{ hist.order_num }}" data-pinned="{{ hist.is_pinned|yesno:'true,false' }}">
+
+                    <button class="pin-btn {% if hist.is_pinned %}active{% endif %}"
+                        onclick="togglePin(event, '{{ hist.history_id }}')" data-tooltip="즐겨찾기">
+                        {% if hist.is_pinned %}★{% else %}☆{% endif %}
+                    </button>
+
+                    <a href="?history_id={{ hist.history_id }}" class="history-link" draggable="false"
+                        data-tooltip="{{ hist.description }}">
+                        <span class="history-title">{{ hist.description }}</span>
+                    </a>
+
+                    <button class="menu-btn" onclick="toggleMenu(event, '{{ hist.history_id }}')">•••</button>
+
+                    <div class="context-menu" id="menu-{{ hist.history_id }}">
+                        <div class="context-item" onclick="startRenameHistory('{{ hist.history_id }}')">
+                            ✎ 채팅 제목 수정하기
+                        </div>
+                        <div class="context-item" onclick="deleteHistory('{{ hist.history_id }}')">
+                            ✕ 삭제하기
+                        </div>
+                    </div>
+                </div>
+
+                {% empty %}
+                <div style="padding:20px; text-align:center; color:#999; font-size:13px;">
+                    대화 기록이 없습니다.
+                </div>
+                {% endfor %}
+            </div>
+        </aside>
+
+        <!-- 사이드바가 접힌 상태에서만 보이는 열기 버튼 (>) -->
+        <button type="button" id="sidebar-open-btn" class="sidebar-open-btn" aria-label="사이드바 열기"
+            data-tooltip="사이드바 열기">
+            &gt;
+        </button>
+
+
+        <main class="chat-area">
+            {% include 'chat/chat_component.html' %}
+        </main>
+
+    </div>
+
+    <!-- 공통 삭제 확인 모달 -->
+    <div id="pai-confirm-overlay" class="pai-confirm-overlay">
+        <div class="pai-confirm-dialog">
+            <div id="pai-confirm-title" class="pai-confirm-title">삭제 확인</div>
+            <p id="pai-confirm-message" class="pai-confirm-message">
+                선택한 내용을 삭제하시겠어요?
+            </p>
+            <div class="pai-confirm-actions">
+                <button type="button" id="pai-confirm-cancel" class="pai-confirm-btn pai-confirm-btn-cancel">
+                    취소
+                </button>
+                <button type="button" id="pai-confirm-ok" class="pai-confirm-btn pai-confirm-btn-danger">
+                    삭제
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pai-toast">이전 채팅의 답변 생성이 중단되었습니다.</div>
+
+
+    <script>
+        // === 공통 삭제 확인 모달 유틸 ===
+        const paiConfirm = {
+            overlay: null,
+            titleEl: null,
+            messageEl: null,
+            okBtn: null,
+            cancelBtn: null,
+            onConfirm: null,
+            initialized: false,
+        };
+
+        function initPaiConfirm() {
+            if (paiConfirm.initialized) return;
+
+            paiConfirm.overlay = document.getElementById('pai-confirm-overlay');
+            if (!paiConfirm.overlay) return;  // 혹시 모달이 없으면 그냥 빠져나감
+
+            paiConfirm.titleEl = document.getElementById('pai-confirm-title');
+            paiConfirm.messageEl = document.getElementById('pai-confirm-message');
+            paiConfirm.okBtn = document.getElementById('pai-confirm-ok');
+            paiConfirm.cancelBtn = document.getElementById('pai-confirm-cancel');
+
+            paiConfirm.cancelBtn.addEventListener('click', closePaiConfirm);
+            paiConfirm.overlay.addEventListener('click', (e) => {
+                if (e.target === paiConfirm.overlay) {
+                    closePaiConfirm();
+                }
+            });
+            paiConfirm.okBtn.addEventListener('click', () => {
+                if (typeof paiConfirm.onConfirm === 'function') {
+                    const cb = paiConfirm.onConfirm;
+                    paiConfirm.onConfirm = null;
+                    cb();
+                }
+                closePaiConfirm();
+            });
+
+            paiConfirm.initialized = true;
+        }
+
+        function openPaiConfirm(message, onConfirm, titleText) {
+            initPaiConfirm();
+
+            // 모달이 혹시 없으면 브라우저 confirm으로 폴백
+            if (!paiConfirm.overlay) {
+                if (confirm(message)) {
+                    onConfirm && onConfirm();
+                }
+                return;
+            }
+
+            paiConfirm.titleEl.textContent = titleText || '삭제 확인';
+            paiConfirm.messageEl.textContent = message;
+            paiConfirm.onConfirm = onConfirm;
+            paiConfirm.overlay.classList.add('show');
+        }
+
+        function closePaiConfirm() {
+            if (!paiConfirm.overlay) return;
+            paiConfirm.overlay.classList.remove('show');
+        }
+
+        // === 1. 메뉴 토글 로직 ===
+        function toggleMenu(event, id) {
+            event.preventDefault(); // 링크 이동 방지
+            event.stopPropagation(); // 상위 클릭 방지
+
+            // 모든 메뉴 닫기
+            document.querySelectorAll('.context-menu').forEach(el => el.classList.remove('show'));
+
+            // 내 메뉴만 열기
+            const menu = document.getElementById('menu-' + id);
+            if (menu) menu.classList.add('show');
+        }
+
+        // 화면 다른 곳 클릭 시 메뉴 닫기
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.context-menu').forEach(el => el.classList.remove('show'));
+        });
+
+        // === 2. 채팅방 삭제 로직 ===
+        function deleteHistory(id) {
+            openPaiConfirm(
+                "정말 이 대화 기록을 삭제하시겠습니까?",
+                async () => {
+                    try {
+                        const response = await fetch('/chat/api/history/delete/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ history_id: id })
+                        });
+                        const res = await response.json();
+
+                        if (res.status === 'success') {
+                            const currentUrlParams = new URLSearchParams(window.location.search);
+                            if (currentUrlParams.get('history_id') == id) {
+                                window.location.href = "{% url 'chat:chat_interface' %}";
+                            } else {
+                                location.reload();
+                            }
+                        } else {
+                            alert("삭제 실패");
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                },
+                "대화 삭제"
+            );
+        }
+
+        // 2-1. 채팅방 제목 인라인 수정 로직 (수정된 버전)
+        function startRenameHistory(id) {
+            // 메뉴 닫기
+            document.querySelectorAll('.context-menu').forEach(el => el.classList.remove('show'));
+
+            const item = document.querySelector(`#history-item-${id}`);
+            if (!item) return;
+
+            const link = item.querySelector('.history-link');
+            const titleSpan = item.querySelector('.history-title');
+            if (!link || !titleSpan) return;
+
+            // 이미 수정 중이면 기존 input에 포커스만
+            const existingInput = item.querySelector('.history-title-input');
+            if (existingInput) {
+                existingInput.focus();
+                return;
+            }
+
+            // [핵심 변경] HTML에서 받아오지 않고, 지금 화면에 있는 텍스트를 가져옵니다.
+            const currentTitle = titleSpan.textContent.trim();
+
+            // 인라인 input 생성
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'history-title-input';
+            input.value = currentTitle; // 최신 제목 주입
+            input.setAttribute('data-id', id);
+
+            // 링크는 잠시 숨기고, input을 그 자리에 끼워 넣기
+            link.style.display = 'none';
+            item.insertBefore(input, link);
+
+            input.focus();
+
+            // 커서를 맨 끝으로 이동 (전체 드래그 X)
+            const length = input.value.length;
+            try {
+                input.setSelectionRange(length, length);
+            } catch (e) {
+                console.warn("setSelectionRange not supported", e);
+            }
+
+            // 취소 (ESC 또는 빈 값 등)
+            const cancelEdit = () => {
+                if (input.parentNode) {
+                    item.removeChild(input);
+                }
+                link.style.display = '';
+            };
+
+            // 저장 (Enter / blur)
+            let isSubmitting = false;
+
+            const submitEdit = async () => {
+                if (isSubmitting) return;
+                isSubmitting = true;
+
+                const newTitle = (input.value || '').trim();
+
+                // 변경 없거나 공백이면 원래대로
+                if (!newTitle || newTitle === currentTitle) {
+                    cancelEdit();
+                    return;
+                }
+
+                try {
+                    const response = await fetch("/chat/api/history/rename/", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            history_id: id,
+                            title: newTitle,
+                        }),
+                    });
+
+                    const res = await response.json();
+
+                    if (res.status === "success") {
+                        // DOM 업데이트
+                        titleSpan.textContent = newTitle;
+
+                        link.setAttribute('data-tooltip', newTitle);
+
+                        // 사이드바 제목 갱신 (선택 사항)
+                        if (typeof updateHistoryTitle === 'function') {
+                            updateHistoryTitle(id, newTitle);
+                        }
+                    } else {
+                        alert("제목 수정 실패: " + (res.message || ""));
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("오류 발생");
+                } finally {
+                    cancelEdit();
+                }
+            };
+
+            // 키보드 이벤트
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    // 한글 조합 중 엔터 중복 방지
+                    if (e.isComposing) return;
+                    submitEdit();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit();
+                }
+            });
+
+            // 포커스가 빠져나가면 저장 시도
+            input.addEventListener('blur', () => {
+                submitEdit();
+            });
+        }
+
+
+        // === 3. Drag & Drop 순서 변경 로직 ===
+        const listContainer = document.getElementById('history-list');
+        let draggedItem = null;
+
+        // (A) 드래그 시작
+        listContainer.addEventListener('dragstart', (e) => {
+            // 항상 가장 가까운 history-item-container를 기준으로 잡기
+            const item = e.target.closest('.history-item-container');
+            if (!item) return;
+
+            draggedItem = item;
+            draggedItem.classList.add('dragging');
+
+            // (선택) 링크 기본 드래그 이미지 같은 거 방지용
+            if (e.dataTransfer) {
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', '');
+            }
+        });
+
+        // (B) 드래그 종료
+        listContainer.addEventListener('dragend', async (e) => {
+            if (!draggedItem) return;
+
+            draggedItem.classList.remove('dragging');
+            draggedItem = null;
+
+            // [중요] 변경된 순서대로 ID 수집해서 서버로 전송
+            const items = listContainer.querySelectorAll('.history-item-container');
+            const totalCount = items.length;
+            items.forEach((item, index) => {
+                const newOrder = totalCount - index;
+                item.setAttribute('data-order', newOrder);
+            });
+
+            // 서버 전송용 ID 목록
+            const orderedIds = Array.from(items).map(item => item.getAttribute('data-id'));
+
+            // API 호출 (순서 저장)
+            await fetch('/chat/api/history/update_order/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ordered_ids: orderedIds })
+            });
+        });
+
+        // (C) 드래그 오버 (자리 바꾸기 로직)
+        listContainer.addEventListener('dragover', (e) => {
+            e.preventDefault(); // 필수: drop 허용
+
+            if (!draggedItem) return;
+
+            const afterElement = getDragAfterElement(listContainer, e.clientY);
+
+            if (afterElement == null) {
+                listContainer.appendChild(draggedItem);
+            } else {
+                listContainer.insertBefore(draggedItem, afterElement);
+            }
+        });
+
+
+        // 마우스 위치에 따라 어떤 요소 앞에 넣을지 계산하는 헬퍼 함수
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.history-item-container:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // === 4. LLM 제목 요약 업데이트 (핵심 추가 기능) ===
+        function updateHistoryTitle(historyId, newTitle) {
+            const item = document.querySelector(`#history-item-${historyId}`);
+            if (!item) return;
+
+            // 1. 텍스트 변경
+            const titleElem = item.querySelector(".history-title");
+            if (titleElem) {
+                titleElem.textContent = newTitle;
+            }
+
+            // [추가] 2. 툴팁 속성 변경
+            const linkElem = item.querySelector(".history-link");
+            if (linkElem) {
+                linkElem.setAttribute("data-tooltip", newTitle);
+            }
+        }
+
+        // === 5. 사이드바 접기 / 열기 ===
+        (function () {
+            const mainContainer = document.querySelector('.main-container');
+            const closeBtn = document.getElementById('sidebar-close-btn'); // 안쪽 <
+            const openBtn = document.getElementById('sidebar-open-btn');   // 바깥쪽 >
+
+            if (!mainContainer || !closeBtn || !openBtn) return;
+
+            function setCollapsed(collapsed) {
+                if (collapsed) {
+                    mainContainer.classList.add('sidebar-collapsed');
+                } else {
+                    mainContainer.classList.remove('sidebar-collapsed');
+                }
+            }
+
+            // 닫기(<) → 접기
+            closeBtn.addEventListener('click', () => setCollapsed(true));
+
+            // 열기(>) → 다시 펼치기
+            openBtn.addEventListener('click', () => setCollapsed(false));
+        })();
+
+        // ============================================================
+        // 글로벌 툴팁 로직 (위치 자동 조정 - 수정됨)
+        // ============================================================
+        const tooltipEl = document.createElement('div');
+        tooltipEl.id = 'global-tooltip';
+        document.body.appendChild(tooltipEl);
+
+        document.addEventListener('mouseover', (e) => {
+            const target = e.target.closest('[data-tooltip]');
+            if (!target) return;
+
+            const text = target.getAttribute('data-tooltip');
+            if (!text) return;
+
+            tooltipEl.textContent = text;
+            tooltipEl.classList.add('show');
+
+            const rect = target.getBoundingClientRect();
+
+            // Case 1: 채팅 목록 아이템 -> 오른쪽 멀리 표시 (기존 유지)
+            if (target.classList.contains('history-link') || target.closest('.history-link')) {
+                const left = rect.right + 57; 
+                const top = rect.top + (rect.height / 2);
+
+                tooltipEl.style.left = left + 'px';
+                tooltipEl.style.top = top + 'px';
+                tooltipEl.style.transform = 'translate(0, -50%)';
+            }
+            // Case 2: [추가] 사이드바 열기/닫기 버튼 -> 바로 오른쪽 옆에 표시
+            else if (target.id === 'sidebar-close-btn' || target.id === 'sidebar-open-btn' || target.closest('.sort-menu-wrapper')) {
+                const left = rect.right + 9; // 버튼에서 12px 떨어짐
+                const top = rect.top + (rect.height / 2); // 수직 중앙 정렬
+
+                tooltipEl.style.left = left + 'px';
+                tooltipEl.style.top = top + 'px';
+                tooltipEl.style.transform = 'translate(0, -50%)';
+            }
+            // Case 3: 그 외 (정렬 버튼 등) -> 위쪽에 표시
+            else {
+                const left = rect.left + (rect.width / 2);
+                const top = rect.top - 8;
+
+                tooltipEl.style.left = left + 'px';
+                tooltipEl.style.top = top + 'px';
+                tooltipEl.style.transform = 'translate(-50%, -100%)';
+            }
+        });
+
+        document.addEventListener('mouseout', (e) => {
+            const target = e.target.closest('[data-tooltip]');
+            if (target) {
+                tooltipEl.classList.remove('show');
+            }
+        });
+
+        window.addEventListener('scroll', () => tooltipEl.classList.remove('show'), true);
+
+        // ============================================================
+        // [수정] 사이드바 정렬 기능 (위치 조정 및 자동 닫기)
+        // ============================================================
+        const sortWrapper = document.getElementById('sort-menu-wrapper'); 
+        const sortMenu = document.getElementById('sort-menu');
+        // sortBtn은 이제 스타일 제어용으로만 씁니다 (이벤트는 wrapper에 위임)
+        const sortBtn = document.getElementById('sort-btn'); 
+
+        if (sortWrapper && sortMenu) {
+            sortWrapper.addEventListener('click', (e) => {
+                e.stopPropagation(); // 상위(sidebar)로 클릭 전파 방지
+
+                // [핵심] 만약 클릭된 요소가 메뉴 항목(.mode-item)이라면?
+                // sortHistoryList 함수가 실행되면서 메뉴를 닫거나 할 텐데,
+                // 여기서 toggle('show')가 또 실행되면 닫혔던 게 다시 열립니다.
+                // 그러니 항목 클릭 시에는 토글을 하지 않고 함수를 종료합니다.
+                if (e.target.closest('.mode-item')) return;
+
+                // 메뉴판 보이기/숨기기 토글
+                sortMenu.classList.toggle('show');
+            });
+
+            // 외부 클릭 시 닫기
+            document.addEventListener('click', (e) => {
+                // 메뉴 wrapper 바깥을 클릭했으면 닫아라
+                if (!e.target.closest('.sort-menu-wrapper')) {
+                    sortMenu.classList.remove('show');
+                }
+            });
+        }
+
+        const sortLabel = document.getElementById('sort-label');
+
+        function sortHistoryList(mode) {
+            const container = document.getElementById('history-list');
+            const items = Array.from(container.querySelectorAll('.history-item-container'));
+
+            // 1. 라벨 업데이트
+            if (sortLabel) {
+                if (mode === 'custom') sortLabel.textContent = '내 편집순';
+                else if (mode === 'name') sortLabel.textContent = '가나다순';
+                else if (mode === 'newest') sortLabel.textContent = '최신순';
+            }
+
+            // 2. 정렬 로직
+            items.sort((a, b) => {
+                // [핵심] '내 편집순' (custom)
+                // 별표(pinned) 여부는 쳐다보지 않고, 오직 사용자가 드래그한 data-order만 봅니다.
+                if (mode === 'custom' || mode === 'pinned') {
+                    const orderA = parseInt(a.getAttribute('data-order')) || 0;
+                    const orderB = parseInt(b.getAttribute('data-order')) || 0;
+                    return orderB - orderA; // 큰 게 위로 (드래그로 설정한 순서)
+                }
+
+                if (mode === 'name') {
+                    const nameA = a.getAttribute('data-name') || '';
+                    const nameB = b.getAttribute('data-name') || '';
+                    return nameA.localeCompare(nameB, 'ko');
+                } else if (mode === 'newest') {
+                    const idA = parseInt(a.getAttribute('data-id'));
+                    const idB = parseInt(b.getAttribute('data-id'));
+                    return idB - idA;
+                }
+                return 0;
+            });
+
+            // 3. DOM 재배치
+            items.forEach(item => container.appendChild(item));
+
+            if (sortMenu) sortMenu.classList.remove('show');
+
+            // 4. 드래그 제어 (내 편집순일 때만 허용)
+            if (mode === 'custom' || mode === 'pinned') {
+                items.forEach(el => el.setAttribute('draggable', 'true'));
+                if (sortBtn) sortBtn.style.color = '';
+                if (sortLabel) sortLabel.style.color = '#888';
+            } else {
+                items.forEach(el => el.setAttribute('draggable', 'false'));
+                // 보기 전용 모드일 땐 색상 표시
+                if (sortBtn) sortBtn.style.color = '#4a5c8d';
+                if (sortLabel) sortLabel.style.color = '#4a5c8d';
+            }
+        }
+
+        // ============================================================
+        // [수정] 즐겨찾기 토글 (순서 이동 X, 시각적 표시만)
+        // ============================================================
+        async function togglePin(event, historyId) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const btn = event.currentTarget;
+            const itemContainer = document.getElementById(`history-item-${historyId}`);
+
+            // 1. UI 즉시 반영 (색깔만 바꿈)
+            const wasPinned = btn.classList.contains('active');
+            const isPinned = !wasPinned;
+
+            if (isPinned) {
+                btn.classList.add('active');
+                btn.textContent = '★';
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = '☆';
+            }
+            if (itemContainer) {
+                itemContainer.setAttribute('data-pinned', isPinned ? 'true' : 'false');
+            }
+
+            // 2. 서버 전송 (상태 저장용)
+            try {
+                const response = await fetch('/chat/api/history/toggle_pin/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ history_id: historyId })
+                });
+                const res = await response.json();
+
+                if (res.status !== 'success') {
+                    // 실패 시 롤백
+                    alert('오류가 발생했습니다.');
+                    location.reload();
+                }
+                // 성공해도 아무것도 안 함 (순서 이동 없음)
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        
+        // ============================================================
+        // [추가] 토스트 알림 & 이탈 감지 로직
+        // ============================================================
+        
+        // 1. 토스트 메시지 띄우기 함수
+        function showPaiToast(message) {
+            const toast = document.getElementById("pai-toast");
+            if (!toast) return;
+
+            toast.textContent = message;
+            toast.className = "show"; // 보이게 설정
+
+            // 3초 뒤에 사라짐
+            setTimeout(function(){ 
+                toast.className = toast.className.replace("show", ""); 
+            }, 3000);
+        }
+
+        // 2. 페이지 로드 시 확인: "방금 답변 중에 도망쳐서 왔나요?"
+        document.addEventListener('DOMContentLoaded', () => {
+            // 저장된 플래그 확인
+            const stopMsg = sessionStorage.getItem('pai_stop_toast');
+            
+            if (stopMsg) {
+                // 플래그가 있으면 토스트 띄우고, 흔적 지우기 (일회성)
+                showPaiToast(stopMsg);
+                sessionStorage.removeItem('pai_stop_toast');
+            }
+
+            // 3. 사이드바 링크 클릭 감지 리스너 등록
+            // (채팅 목록 링크 + 새 채팅 버튼)
+            const links = document.querySelectorAll('.history-link, .new-chat-btn');
+            
+            links.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    // 전역 변수 abortController가 존재한다는 건 = 답변 생성 중이라는 뜻
+                    if (typeof abortController !== 'undefined' && abortController) {
+                        // 다음 페이지에서 띄울 메시지를 저장해둠
+                        sessionStorage.setItem('pai_stop_toast', '이전 채팅의 답변 생성이 중단되었습니다.');
+                        
+                        // (참고: 클릭을 막지 않음. 자연스럽게 이동하면 브라우저가 알아서 연결을 끊음)
+                    }
+                });
+            });
+        });
+
+    </script>
+
+</body>
+
+</html>

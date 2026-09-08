@@ -1,0 +1,104 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}회원탈퇴 - Pai{% endblock %}
+
+{% block content %}
+<div class="page-wrapper">
+    <div class="content-box">
+        <ol>
+                <li>
+                    탈퇴 시 처리되는 내용
+                    <ul class="bullet-list">
+                        <li>계정 정보 및 개인 데이터는 관련 법령을 준수하여 즉시 삭제 또는 일정 기간 보관 후 삭제됩니다.</li>
+                        <li>이용자가 직접 생성한 검색 기록, 질의 기록 등은 서비스 품질 향상 목적의 비식별 데이터로만 유지될 수 있습니다.</li>
+                        <li>탈퇴 후에는 동일 계정 정보로 복구가 불가능합니다.</li>
+                    </ul>
+                </li>
+
+                <li>
+                    서비스 이용에 대한 책임
+                    <ul class="bullet-list">
+                        <li>Pai는 정보 제공 목적의 AI 기반 서비스로, 제공되는 분석 결과·검색 정보 등은 법적 효력이나 책임을 갖지 않습니다.</li>
+                        <li>회원 탈퇴 여부와 관계없이, 과거 Pai 서비스 이용을 기반으로 사용자가 내린 판단·결과에 대해 Pai는 책임을 부담하지 않습니다.</li>
+                    </ul>
+                </li>
+
+                <li>
+                    탈퇴 전 확인
+                    <ul class="bullet-list">
+                        <li>탈퇴 후에는 검색 결과 등 모든 개인화 정보가 삭제됩니다.</li>
+                        <li>서비스 이용 이력은 통계 목적의 비식별 처리된 데이터로만 유지될 수 있습니다.</li>
+                    </ul>
+                </li>
+
+                <li>
+                    진행 방법
+                    <div class="withdraw-info">
+                        아래 버튼을 누르면 회원탈퇴가 완료됩니다.<br>
+                        탈퇴 후 즉시 로그아웃되며 서비스 이용이 제한됩니다.
+                    </div>
+                </li>
+        </ol>
+
+        <div class="button-area">
+            <button type="button" class="btn btn-danger" id="open-modal-btn">
+                회원탈퇴하기
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 탈퇴 폼 (보이지 않음) -->
+<form id="delete-form" method="POST" action="{% url 'account:withdraw_final' %}">
+    {% csrf_token %}
+</form>
+
+<!-- 탈퇴 확인 모달 -->
+<div id="confirm-modal" class="modal-overlay">
+    <div class="modal-box">
+        <p class="modal-text">
+            정말 탈퇴하시겠습니까?<br>
+            탈퇴 후에는 모든 데이터가 삭제되며 복구할 수 없습니다.
+        </p>
+
+        <div class="modal-btn-area">
+            <button type="button" class="modal-btn modal-confirm" id="confirm-btn">
+                탈퇴하기
+            </button>
+            <button type="button" class="modal-btn modal-cancel" id="cancel-btn">
+                아니요
+            </button>
+        </div>
+    </div>
+</div>
+
+    <script>
+        const openModalBtn = document.getElementById('open-modal-btn');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmBtn = document.getElementById('confirm-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const deleteForm = document.getElementById('delete-form');
+
+        // 모달 열기
+        openModalBtn.addEventListener('click', function () {
+            confirmModal.style.display = 'flex';
+        });
+
+        // 아니요 → 모달 닫기
+        cancelBtn.addEventListener('click', function () {
+            confirmModal.style.display = 'none';
+        });
+
+        // 바깥 영역 클릭 → 모달 닫기
+        confirmModal.addEventListener('click', function (event) {
+            if (event.target === confirmModal) {
+                confirmModal.style.display = 'none';
+            }
+        });
+
+        // 진짜 탈퇴하기 → 폼 제출
+        confirmBtn.addEventListener('click', function () {
+            deleteForm.submit();  // POST 요청 전송
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,54 @@
+# ============================================================
+# Vision-Patent-Search-LLM-Chatbot  통합 .gitignore
+# (07_3rd_project / 08_4th_project 공통)
+# ============================================================
+
+# --- 환경 변수 / 시크릿 (API 키 포함, 절대 커밋 금지) ---
+.env
+*.env
+!.env.example
+
+# --- ChromaDB 벡터 DB (대용량, 실행 시 재생성) ---
+# doc_db / ipc_db 는 어느 경로에 있든 제외
+**/doc_db/
+**/ipc_db/
+**/*.sqlite3
+**/*.bin
+chroma.sqlite3
+
+# --- 대용량 전처리 데이터 (실행용, git 제외) ---
+*.jsonl
+*.xml
+preprocessed_data*.jsonl
+
+# --- Django ---
+**/db.sqlite3
+**/migrations/__pycache__/
+**/sessions/sessionid*
+staticfiles/
+media/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# --- 가상환경 ---
+venv/
+.venv/
+env/
+*_env/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- 로그 ---
+*.log

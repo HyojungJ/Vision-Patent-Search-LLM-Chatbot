@@ -1,0 +1,27 @@
+# rag_engine (RAG 검색 엔진) 의존성
+# 설치: pip install -r requirements.txt
+# Python 3.12 기준
+
+# --- LLM / 에이전트 ---
+langchain-core
+langchain-openai
+langgraph
+openai
+
+# --- 벡터 DB / 검색 ---
+chromadb
+sentence-transformers        # 청구항 임베딩 (dragonkue/BGE-m3-ko)
+rank-bm25                     # BM25 키워드 검색 (하이브리드)
+torch                         # sentence-transformers 백엔드
+
+# --- 데이터 처리 ---
+numpy
+pandas
+
+# --- 데모 UI ---
+streamlit
+
+# --- 유틸 ---
+pydantic
+python-dotenv
+tqdm

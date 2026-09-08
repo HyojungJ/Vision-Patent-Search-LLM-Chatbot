@@ -1,0 +1,15 @@
+{% extends 'layout/account_base.html' %}
+
+{% block title %}Pai | 회원가입 완료{% endblock %}
+
+{% block content %}
+<script>
+    document.body.classList.add('success-page');
+</script>
+
+<div class="success-message">
+    <h2 class="success-title">🎉 회원가입 완료!</h2>
+    <p class="success-text">{{ username }}님, 환영합니다!<br>이제 Pai와 함께 특허 검색을 시작해보세요.</p>
+    <a href="{% url 'account:login' %}" class="success-btn">로그인하기</a>
+</div>
+{% endblock %}

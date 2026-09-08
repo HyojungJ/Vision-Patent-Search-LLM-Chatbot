@@ -1,0 +1,25 @@
+# web_service (Django 웹 챗봇) 의존성
+# 설치: pip install -r requirements.txt
+# Python 3.12 기준
+
+# --- 웹 프레임워크 ---
+django
+
+# --- LLM / 에이전트 ---
+langchain-core
+langchain-openai
+langgraph
+openai
+
+# --- 벡터 DB / 검색 (llm_module) ---
+chromadb
+sentence-transformers        # 청구항 임베딩 (dragonkue/BGE-m3-ko)
+rank-bm25                     # BM25 키워드 검색 (하이브리드)
+torch                         # sentence-transformers 백엔드
+
+# --- 유틸 ---
+pydantic
+python-dotenv
+
+# --- 배포 (선택) ---
+gunicorn

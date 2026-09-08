@@ -1,0 +1,267 @@
+@charset "UTF-8";
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+/* 기본 초기화 */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+
+/* [중요] 부모 요소 높이 설정 */
+html, body {
+    width: 100%;
+    overflow-x: hidden; /* 가로 스크롤만 숨김 */
+    scroll-padding-top: 80px; /* 스크롤 시 navbar 높이만큼 여백 확보 */
+}
+
+/* --- 1. 커스텀 네비게이션 바 (고정) --- */
+.custom-navbar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 60px !important;
+    background-color: rgba(255, 255, 255, 0.98) !important; /* 더 불투명하게 */
+    backdrop-filter: blur(15px); /* 블러 효과 증가 */
+    border-bottom: 2px solid #ddd !important; /* 경계선 강화 */
+    z-index: 10000 !important; /* z-index 증가 */
+    display: flex !important;
+    align-items: center !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important; /* 그림자 추가 */
+}
+
+.navbar-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar-logo .logo-img {
+    height: 32px;
+    width: auto;
+}
+
+.navbar-menu {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.nav-welcome {
+    color: #4A5B7D;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.nav-link {
+    padding: 6px 12px;
+    background-color: #4A5B7D;
+    color: white;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.nav-link:hover {
+    background-color: #3b4c6e;
+    transform: translateY(-2px);
+    color: white;
+}
+
+/* 기존 헤더 스타일 제거됨 - 커스텀 navbar 사용 */
+
+
+/* --- 2. 스크롤 래퍼 --- */
+.snap-wrapper {
+    width: 100%;
+    position: relative;
+    padding-top: 80px; /* navbar 높이보다 여유있게 패딩 추가 */
+}
+
+/* --- 3. 공통 섹션 스타일 --- */
+.full-section {
+    width: 100%;
+    min-height: 55vh; /* 높이를 적절히 조정 */
+    display: flex;
+    align-items: center; 
+    justify-content: center;
+    position: relative;
+    padding: 30px 0; /* 패딩을 적절히 증가 */
+    scroll-margin-top: 80px; /* 스크롤 시 navbar 높이만큼 여백 */
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 20px;
+}
+
+
+/* --- 4. Hero Section 스타일 --- */
+.hero { 
+    background-color: #F8F9FB; 
+    padding-top: 20px; /* 추가 패딩으로 navbar와 겹치지 않도록 */
+}
+
+/* hero-container-flex 제거됨 - 사용하지 않음 */
+
+/* [수정됨] 내부 컨텐츠 레이아웃: 왼쪽 패딩 추가로 전체를 오른쪽으로 밈 */
+.hero-content-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 30px; /* 마진을 적절히 증가 */
+    
+    padding-left: 40px; /* [핵심] 전체적으로 오른쪽으로 이동시킴 */
+}
+
+.hero-text { 
+    flex: 1; 
+    max-width: 650px; 
+    text-align: left; 
+}
+
+/* 제목 등 텍스트 스타일 */
+.hero-title { 
+    font-size: 72px; 
+    font-weight: 700; 
+    margin-bottom: 15px; 
+    color: #4A5B7D; /* 통일된 색상 */
+    opacity: 1; /* 일단 바로 보이게 하고 */
+    animation: fadeInUp 0.8s ease-out; /* forwards 제거 */
+    animation-delay: 0.1s; /* 지연시간 단축 */
+}
+.hero-subtitle { 
+    font-size: 32px; 
+    font-weight: 600; 
+    color: #4A5B7D; /* 통일된 색상 */
+    margin-bottom: 30px;
+    opacity: 1; /* 일단 바로 보이게 하고 */
+    animation: fadeInUp 0.8s ease-out; /* forwards 제거 */
+    animation-delay: 0.2s; /* 지연시간 단축 */
+}
+.hero-desc { 
+    font-size: 20px; 
+    line-height: 1.7; 
+    color: #4A5B7D; /* 통일된 색상 */
+    margin-bottom: 0;
+    opacity: 1; /* 일단 바로 보이게 하고 */
+    animation: fadeInUp 0.8s ease-out; /* forwards 제거 */
+    animation-delay: 0.3s; /* 지연시간 단축 */
+}
+/* hero-desc strong 제거됨 - 부모 색상 상속 */
+
+/* 시작하기 버튼 */
+.btn-start {
+    display: block;
+    margin: 15px auto 0; 
+    width: fit-content;
+    background-color: #4A5B7D;
+    color: white;
+    font-size: 19px; /* 24px에서 19px로 (약 20% 축소) */
+    font-weight: 800;
+    padding: 12px 48px; /* 15px 60px에서 12px 48px로 (20% 축소) */
+    border-radius: 40px; /* 50px에서 40px로 (20% 축소) */
+    box-shadow: 0 6px 12px rgba(0,0,0,0.2); /* 그림자도 비례해서 축소 */
+    transition: transform 0.2s, background-color 0.2s;
+    opacity: 1; /* 일단 바로 보이게 */
+    animation: popIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    animation-delay: 0.4s; /* 지연시간 단축 */
+}
+.btn-start:hover { background-color: #3b4c6e; transform: scale(1.05); }
+
+/* 이미지 영역 */
+.hero-image { 
+    flex: 1; 
+    text-align: right; 
+    display: flex; 
+    justify-content: center; 
+    opacity: 1; /* 일단 바로 보이게 */
+    animation: fadeInRight 1s ease-out; 
+    animation-delay: 0.2s; /* 지연시간 단축 */
+}
+.mascot-img { 
+    max-width: 200px; /* 300px에서 200px로 줄임 */
+    width: 100%; height: auto; 
+    animation: float 3s ease-in-out infinite; 
+}
+
+
+/* --- 5. Features Section 스타일 --- */
+.features { background-color: #fff; }
+
+.section-title {
+    font-size: 42px;
+    font-weight: 800;
+    color: #4A5B7D; /* 통일된 색상 */
+    margin-bottom: 80px;
+    text-align: center;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+}
+
+.feature-card {
+    background-color: #F5F7FA;
+    padding: 50px 30px;
+    border-radius: 12px;
+    text-align: center;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 1; /* 일단 바로 보이게 */
+    transform: translateY(0); /* 위치 고정 */
+    transition: all 0.6s ease-out;
+}
+.feature-card.show { opacity: 1; transform: translateY(0); }
+
+.feature-title { font-size: 24px; font-weight: 700; margin-bottom: 25px; color: #4A5B7D; } /* 통일된 색상 */
+.feature-desc { font-size: 18px; color: #4A5B7D; line-height: 1.6; word-break: keep-all; } /* 통일된 색상 */
+
+
+/* --- Footer 강제 표시 --- */
+.footer-notice {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+    z-index: 1000 !important;
+    text-align: center !important;
+    font-size: 16px !important;
+    color: #4A5B7D !important;
+    font-weight: 600 !important;
+    padding: 40px 0 !important;
+    margin-top: 80px !important;
+    border-top: 3px solid #4A5B7D !important;
+    background-color: #f8f9fa !important;
+    width: 100% !important;
+}
+
+/* --- 애니메이션 키프레임 --- */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes popIn {
+    0% { opacity: 0; transform: scale(0.5); }
+    70% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 1; transform: scale(1); }
+}
+@keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
+}
