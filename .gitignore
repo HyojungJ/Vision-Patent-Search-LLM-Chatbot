@@ -44,6 +44,11 @@ env/
 # --- Jupyter ---
 .ipynb_checkpoints/
 
+# --- Vision 파이프라인 생성물 (스크립트로 재생성 가능, git 제외) ---
+**/vision/preprocess_output/
+**/vision/test_drawings/
+**/vision/sample_downloads/
+
 # --- IDE / OS ---
 .vscode/
 .idea/
