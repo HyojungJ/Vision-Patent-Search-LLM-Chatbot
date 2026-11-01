@@ -58,8 +58,16 @@ def patent_hybrid_search(
                     "z-score": z
                 })
         
+        # 같은 청구항이 여러 쿼리에서 검색되면 가장 좋은(가장 낮은) z-score 하나만 유지
+        #  - 중복을 그대로 두면 BM25 후보 풀과 특허별 청구항 수(count_bonus)가 부풀려짐
+        best_by_id = {}
+        for c in candidates:
+            prev = best_by_id.get(c["id"])
+            if prev is None or c["z-score"] < prev["z-score"]:
+                best_by_id[c["id"]] = c
+
         # z-score 기준 정렬 후 상위 선택
-        top_candidates = sorted(candidates, key=lambda x: x["z-score"])[:final_top_k]
+        top_candidates = sorted(best_by_id.values(), key=lambda x: x["z-score"])[:final_top_k]
         
         # collection.query 형식으로 재구성
         results = {

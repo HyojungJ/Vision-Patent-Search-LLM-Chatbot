@@ -102,9 +102,33 @@ def _normalize_max_claims(raw_max_claims: int | None) -> int:
     return value
 
 
+MAX_SUB_QUERIES = 4          # 멀티 쿼리 최대 개수 (쿼리당 검색 비용 제한)
+
+
+def _build_query_list(query_text: str, sub_queries: Optional[List[str]]) -> List[str]:
+    """
+    검색에 사용할 쿼리 리스트를 만듭니다.
+
+    - 공백/중복 하위 쿼리는 제거하고 최대 MAX_SUB_QUERIES개까지만 사용합니다.
+    - 유효한 하위 쿼리가 2개 이상이면 그 리스트를 반환해 멀티 쿼리 검색을 수행합니다.
+    - 그렇지 않으면 query_text 하나로 단일 검색합니다.
+    """
+    cleaned: List[str] = []
+    for q in sub_queries or []:
+        q = (q or "").strip()
+        if q and q not in cleaned:
+            cleaned.append(q)
+    cleaned = cleaned[:MAX_SUB_QUERIES]
+
+    if len(cleaned) >= 2:
+        return cleaned
+    return [query_text]
+
+
 @tool(args_schema=PatentSearchInput)
 def tool_search_patent_with_description(
     query_text: str,
+    sub_queries: Optional[List[str]] = None,
     top_k: int = 5,
     max_claims_per_patent: int = 3,
     exclude_patent_ids: Optional[List[str]] = None,
@@ -126,6 +150,14 @@ def tool_search_patent_with_description(
         유사 특허를 찾기 위한 핵심 기술 설명 또는 키워드.
         *이미 LLM이 추출/정제한 핵심 기술 문장*을 넣는 것을 권장합니다.
         (예: "사용자와의 거리 변화에 따라 자동으로 곡률이 바뀌는 디스플레이 장치")
+
+    - sub_queries:
+        query_text를 서로 독립적인 핵심 기술 단위 2~4개로 나눈 하위 쿼리 목록입니다.
+        여러 기술 요소가 결합된 아이디어라면 반드시 나눠서 넣으세요.
+        (예: ["곡률이 변하는 디스플레이", "사용자 거리 감지", "자동 곡면 조절 장치"])
+        하위 쿼리마다 따로 검색한 뒤 쿼리별 거리를 Z-score로 정규화해 통합하므로,
+        DB에 흔한 주제의 쿼리가 결과를 독점하는 편향을 줄일 수 있습니다.
+        기술 요소가 하나뿐이면 비워 두세요(query_text 단일 검색).
 
     - top_k:
         최종적으로 사용자에게 보여줄 "특허 개수"입니다.
@@ -151,7 +183,8 @@ def tool_search_patent_with_description(
     final_top_k = max(200, search_pool_size)
 
     # 1) 쿼리 리스트 구성
-    query_list = [query_text]
+    #    하위 쿼리가 2개 이상이면 멀티 쿼리(Z-score 정규화 통합) 검색, 아니면 단일 검색
+    query_list = _build_query_list(query_text, sub_queries)
 
     # 2) hybrid search 함수 호출
     raw_results = patent_hybrid_search(
