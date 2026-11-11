@@ -37,6 +37,12 @@ DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",") if os.getenv("DJANGO_ALLOWED_HOSTS") else []
 
+# nginx 리버스 프록시 뒤에서 동작할 때 (배포: docker-compose.yml)
+# 예: DJANGO_CSRF_TRUSTED_ORIGINS=http://localhost,https://example.com
+CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o]
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 # Application definition
 
@@ -88,7 +94,8 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        # 컨테이너에서는 볼륨 경로로 지정 (DJANGO_SQLITE_PATH), 로컬은 기존 위치 유지
+        "NAME": Path(os.getenv("DJANGO_SQLITE_PATH", BASE_DIR / "db.sqlite3")),
     }
 }
 
@@ -132,6 +139,9 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
+
+# collectstatic 결과 경로 → nginx가 /static/ 으로 직접 서빙
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # --- 세션 설정 ---
 # DB 대신 파일 기반 세션 사용 (마이그레이션 불필요, sessions/ 폴더에 저장)
