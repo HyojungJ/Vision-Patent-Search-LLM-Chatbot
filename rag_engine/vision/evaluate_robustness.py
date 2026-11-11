@@ -5,7 +5,13 @@
   1. images/ 의 도면 한 장을 골라 일부러 변형한다 (기울임, 축소, 노이즈 ...).
   2. 변형본을 쿼리로 넣어 images/ 전체(원본 포함)를 검색한다.
   3. 원본이 몇 위로 나오는지 기록한다.
-  4. 모든 도면에 반복해서 Top-1 정확도, Recall@5 를 계산한다.
+  4. 모든 도면에 반복해서 Top-1 정확도, Hit@5 를 계산한다.
+
+지표 정의:
+  - 정답: 쿼리의 원본 도면. 파일 내용이 완전히 같은 도면도 같은 정답으로 본다.
+  - 순위: 정답이 아닌 도면 중 원본과 점수가 같거나 더 높은 도면의 수 + 1 (동점은 불리하게 계산)
+  - Top-1 정확도: 순위가 1위인 쿼리의 비율
+  - Hit@5: 순위가 5위 이내인 쿼리의 비율 (상위 5개 안에 정답이 있는가)
 
 주의: 이 테스트는 '같은 도면이 변형돼도 알아보는가'를 잰다.
       서로 다른 특허끼리 비슷한지는 이 테스트로 알 수 없다.
@@ -116,7 +122,10 @@ def main():
     img_dir = os.path.join(base, "..", "images")
     paths = list_drawings(img_dir)
     ids = [os.path.splitext(os.path.basename(p))[0] for p in paths]
-    print(f"도면 {len(paths)}장으로 테스트합니다.")
+    print(
+        f"검색 대상: 도면 {len(paths)}장 / 평가 쿼리: 조건별 {len(paths)}장 "
+        f"(변형 조건 {len(CONDITIONS)}개, 총 {len(paths) * len(CONDITIONS)}건)"
+    )
 
     # 내용이 완전히 같은 도면은 같은 정답으로 인정 (순위 계산에서 서로 제외)
     twins = find_identical_files(ids, paths)
@@ -161,14 +170,14 @@ def main():
     # 3) 결과 표
     n = len(ids)
     print("\n" + "=" * 70)
-    print(f"{'변형 조건':28} | {'Top-1':>7} | {'Recall@5':>8} | {'순위 중앙값':>9}")
+    print(f"{'변형 조건':28} | {'Top-1':>7} | {'Hit@5':>8} | {'순위 중앙값':>9}")
     print("-" * 70)
     for cond in CONDITIONS:
         r = list(ranks[cond].values())
         top1 = sum(1 for x in r if x == 1) / n
-        rec5 = sum(1 for x in r if x <= 5) / n
+        hit5 = sum(1 for x in r if x <= 5) / n
         med = float(np.median(r))
-        print(f"{cond:28} | {top1 * 100:>6.0f}% | {rec5 * 100:>7.0f}% | {med:>9.0f}")
+        print(f"{cond:28} | {top1 * 100:>6.0f}% | {hit5 * 100:>7.0f}% | {med:>9.0f}")
 
     # 4) 원본을 1위로 못 찾은 경우 목록
     print("\n원본을 1위로 못 찾은 도면 (조건: 순위)")
