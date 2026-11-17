@@ -1,0 +1,255 @@
+{
+  "summary": {
+    "Before (거리 그대로)": {
+      "Hit@5": 0.9666666666666667,
+      "Hit@10": 0.9666666666666667
+    },
+    "After (Z-score)": {
+      "Hit@5": 0.9666666666666667,
+      "Hit@10": 0.9666666666666667
+    }
+  },
+  "per_query": [
+    {
+      "qid": "Q01",
+      "gold": [
+        "1020207029927"
+      ],
+      "distance": null,
+      "zscore": null
+    },
+    {
+      "qid": "Q02",
+      "gold": [
+        "1020207034387"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q03",
+      "gold": [
+        "1020210019366"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q04",
+      "gold": [
+        "1020210052447"
+      ],
+      "distance": 1,
+      "zscore": 2
+    },
+    {
+      "qid": "Q05",
+      "gold": [
+        "1020217038827"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q06",
+      "gold": [
+        "1020220000386"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q07",
+      "gold": [
+        "1020220045372"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q08",
+      "gold": [
+        "1020220085851"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q09",
+      "gold": [
+        "1020220171135"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q10",
+      "gold": [
+        "1020227028198"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q11",
+      "gold": [
+        "1020227035376"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q12",
+      "gold": [
+        "1020227036955"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q13",
+      "gold": [
+        "1020227039597"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q14",
+      "gold": [
+        "1020227043150"
+      ],
+      "distance": 2,
+      "zscore": 3
+    },
+    {
+      "qid": "Q15",
+      "gold": [
+        "1020230061682"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q16",
+      "gold": [
+        "1020237028020"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q17",
+      "gold": [
+        "1020240032231"
+      ],
+      "distance": 2,
+      "zscore": 2
+    },
+    {
+      "qid": "Q18",
+      "gold": [
+        "1020247000898"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q19",
+      "gold": [
+        "1020247005263"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q20",
+      "gold": [
+        "1020247011474"
+      ],
+      "distance": 3,
+      "zscore": 2
+    },
+    {
+      "qid": "Q21",
+      "gold": [
+        "1020247013603"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q22",
+      "gold": [
+        "1020247021190"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q23",
+      "gold": [
+        "1020247020186",
+        "1020247023227"
+      ],
+      "distance": 2,
+      "zscore": 2
+    },
+    {
+      "qid": "Q24",
+      "gold": [
+        "1020247028656"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q25",
+      "gold": [
+        "1020247033953"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q26",
+      "gold": [
+        "1020247036745"
+      ],
+      "distance": 2,
+      "zscore": 2
+    },
+    {
+      "qid": "Q27",
+      "gold": [
+        "1020247040854"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q28",
+      "gold": [
+        "1020247042082"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q29",
+      "gold": [
+        "1020247042160"
+      ],
+      "distance": 1,
+      "zscore": 1
+    },
+    {
+      "qid": "Q30",
+      "gold": [
+        "1020257021379"
+      ],
+      "distance": 1,
+      "zscore": 1
+    }
+  ]
+}

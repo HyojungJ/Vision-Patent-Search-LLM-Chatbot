@@ -13,8 +13,17 @@ def patent_hybrid_search(
     top_k=30,
     max_claims_per_patent=3,
     vector_weight=0.7,
-    bm25_weight=0.3
+    bm25_weight=0.3,
+    merge="zscore",
 ):
+    """
+    merge: 하위 쿼리가 2개 이상일 때 후보를 합치는 기준.
+      - "zscore"   (기본): 쿼리마다 거리를 Z-score로 정규화한 값으로 합침
+      - "distance"       : 정규화 없이 원래 거리로 합침 (비교 실험용)
+    """
+    if merge not in ("zscore", "distance"):
+        raise ValueError(f"merge must be 'zscore' or 'distance', got {merge!r}")
+    merge_key = "z-score" if merge == "zscore" else "distance"
     
     # ========================================
     # 1. Multi-query rerank
@@ -58,16 +67,16 @@ def patent_hybrid_search(
                     "z-score": z
                 })
         
-        # 같은 청구항이 여러 쿼리에서 검색되면 가장 좋은(가장 낮은) z-score 하나만 유지
+        # 같은 청구항이 여러 쿼리에서 검색되면 가장 좋은(가장 낮은) 값 하나만 유지
         #  - 중복을 그대로 두면 BM25 후보 풀과 특허별 청구항 수(count_bonus)가 부풀려짐
         best_by_id = {}
         for c in candidates:
             prev = best_by_id.get(c["id"])
-            if prev is None or c["z-score"] < prev["z-score"]:
+            if prev is None or c[merge_key] < prev[merge_key]:
                 best_by_id[c["id"]] = c
 
-        # z-score 기준 정렬 후 상위 선택
-        top_candidates = sorted(best_by_id.values(), key=lambda x: x["z-score"])[:final_top_k]
+        # 합치는 기준(기본 z-score) 오름차순 정렬 후 상위 선택
+        top_candidates = sorted(best_by_id.values(), key=lambda x: x[merge_key])[:final_top_k]
         
         # collection.query 형식으로 재구성
         results = {
